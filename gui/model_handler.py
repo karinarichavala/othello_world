@@ -1,20 +1,10 @@
 # model_handler.py
 # Encapsula la lógica de cargar y consultar el modelo Othello-GPT
 
-import os
 import torch
-import numpy as np
 import torch.nn.functional as F
-import sys
 
-# Agregamos el directorio raíz al path para poder importar módulos del proyecto
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
-
-# Importamos las clases y funciones necesarias del proyecto
 from mingpt.model import GPT, GPTConfig
-from data.othello import permit, permit_reverse
 
 class ModelHandler:
     def __init__(self, checkpoint_path=None, probs_plot=None):
@@ -33,7 +23,7 @@ class ModelHandler:
             try:
                 self.model = self.load_model(checkpoint_path)
                 print(f"Modelo cargado correctamente desde {checkpoint_path}")
-            except Exception as e:
+            except (FileNotFoundError, RuntimeError) as e:  # Excepciones específicas
                 print(f"Error al cargar el modelo: {e}")
                 print("Continuando sin el modelo (no se mostrarán probabilidades)")
     
@@ -47,13 +37,13 @@ class ModelHandler:
         Returns:
             El modelo cargado.
         """
-        # Configuración del modelo - ajusta estos parámetros según tu modelo entrenado
+        # Configuración del modelo - 
         model_config = GPTConfig(
-            vocab_size=64,  # Tamaño del vocabulario (número de posiciones en el tablero)
-            block_size=60,  # Tamaño máximo de secuencia
-            n_layer=8,      # Número de capas transformer
-            n_head=8,       # Número de cabezas de atención
-            n_embd=512      # Dimensión de embedding
+            vocab_size=61,  # Tamaño del vocabulario con el checkpoint
+            block_size=59,  # Tamaño máximo de secuencia 
+            n_layer=8,     # Número de capas transformer 
+            n_head=8,      # Número de cabezas de atención
+            n_embd=512     # Dimensión de embedding 
         )
         
         # Crear el modelo
@@ -61,24 +51,22 @@ class ModelHandler:
         
         # Cargar los pesos del checkpoint
         checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
-        model.load_state_dict(checkpoint['model'])
-        
+        model.load_state_dict(checkpoint)  # Cargar directamente el checkpoint
+
         # Poner el modelo en modo de evaluación
         model.eval()
-        
+
         return model
     
-    def get_move_probabilities(self, board_state, move_history):
+    def get_move_probabilities(self, move_history):  # Eliminamos board_state no utilizado
         """
         Obtiene las probabilidades de cada jugada según el modelo Othello-GPT.
         
         Args:
-            board_state: Estado actual del tablero (numpy array)
             move_history: Historial de movimientos hasta ahora
         
         Returns:
             Diccionario con las coordenadas de las jugadas y sus probabilidades.
-            Si el modelo no está cargado, retorna un diccionario vacío.
         """
         if self.model is None:
             return {}
@@ -98,25 +86,24 @@ class ModelHandler:
         probs = probs[0].numpy()  # shape [vocab_size]
         
         # Crear diccionario de jugadas y probabilidades
-        # Asumimos que los índices de 0 a 63 corresponden a las posiciones del tablero
+        # Ajustamos el rango para que coincida con el tamaño del vocabulario
         move_probs = {}
-        for pos in range(64):
+        for pos in range(len(probs)):  # Usamos len(probs) para evitar índices fuera de rango
             row, col = pos // 8, pos % 8
             coord = f"{chr(97 + row)}{col + 1}"  # Por ejemplo, "a1", "b2", etc.
             move_probs[coord] = probs[pos]
         
         return move_probs
         
-    def update_probabilities(self, board_state, move_history):
+    def update_probabilities(self, move_history):
         """
         Actualiza el gráfico de probabilidades basado en el estado actual del tablero.
         
         Args:
-            board_state: Estado actual del tablero
             move_history: Historial de movimientos hasta ahora
         """
         # Obtener las probabilidades del modelo
-        move_probs = self.get_move_probabilities(board_state, move_history)
+        move_probs = self.get_move_probabilities(move_history)
         
         # Actualizar el gráfico si está disponible
         if self.probs_plot is not None:
