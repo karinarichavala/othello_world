@@ -15,7 +15,7 @@ from gui.model_handler import ModelHandler
 
 if __name__ == "__main__":
     # Ruta al checkpoint del modelo pre-entrenado
-    checkpoint_path = "../ckpts/battery_othello/gpt_championship.ckpt"  # Cambiado a gpt_championship.ckpt
+    checkpoint_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ckpts", "gpt_championship.ckpt")
     
     # Inicializa la GUI del gráfico de probabilidades
     probs_plot = ProbsPlot()
@@ -23,9 +23,8 @@ if __name__ == "__main__":
     # Crear el manejador del modelo
     model_handler = ModelHandler(checkpoint_path, probs_plot)
     
-    # Inicializa la GUI del juego con el callback para actualizar el gráfico
-    game_gui = GameGUI(callback=model_handler.update_probabilities)
+    # Inicializa la GUI del juego con el callback para realizar jugadas automáticas
+    game_gui = GameGUI(callback=model_handler)
     
     # Ejecutar la interfaz
-    game_gui.run()
     game_gui.run()

@@ -91,8 +91,9 @@ class ProbsPlot:
             self.ax.text(bar.get_x() + bar.get_width()/2., height + 0.5,
                         f'{height:.1f}%', ha='center', va='bottom', rotation=0)
         
-        # Ajustar las etiquetas del eje x para evitar solapamiento
-        self.ax.set_xticklabels(positions, rotation=45, ha='right')
+        # Configurar las posiciones y etiquetas del eje x correctamente
+        self.ax.set_xticks(range(len(positions)))  # Establecer las posiciones de los ticks
+        self.ax.set_xticklabels(positions, rotation=45, ha='right')  # Establecer las etiquetas
         
         # Actualizar el canvas
         self.fig.tight_layout()

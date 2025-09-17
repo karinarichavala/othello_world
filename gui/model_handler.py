@@ -5,6 +5,53 @@ import torch
 import torch.nn.functional as F
 
 from mingpt.model import GPT, GPTConfig
+from data.othello import permit, permit_reverse
+
+def board_to_model_index(board_pos):
+    """
+    Convierte un índice del tablero (0-63) a un índice del modelo (1-60).
+    Las casillas centrales (D3, D4, E3, E4) no tienen índice en el modelo.
+    """
+    # Las casillas centrales no tienen índice en el modelo
+    center_squares = {27, 28, 35, 36}  # D3, D4, E3, E4 en formato tablero
+    if board_pos in center_squares:
+        return None
+        
+    # Calcular el desplazamiento basado en cuántas casillas centrales hay antes de esta posición
+    offset = 0
+    if board_pos > 36:  # Después de E4
+        offset = 4
+    elif board_pos > 35:  # Después de E3
+        offset = 3
+    elif board_pos > 28:  # Después de D4
+        offset = 2
+    elif board_pos > 27:  # Después de D3
+        offset = 1
+        
+    # El índice del modelo empieza en 1 (0 es para "pass")
+    return board_pos - offset + 1
+
+def model_to_board_index(model_pos):
+    """
+    Convierte un índice del modelo (1-60) a un índice del tablero (0-63).
+    """
+    if model_pos == 0:  # "pass" no tiene equivalente en el tablero
+        return None
+        
+    # Ajustar por el offset de las casillas centrales
+    board_pos = model_pos - 1  # -1 porque el modelo empieza en 1
+    
+    # Agregar offset para las casillas centrales
+    if board_pos >= 33:  # Después de E4 en el modelo
+        board_pos += 4
+    elif board_pos >= 27:  # Después de E3 en el modelo
+        board_pos += 3
+    elif board_pos >= 26:  # Después de D4 en el modelo
+        board_pos += 2
+    elif board_pos >= 25:  # Después de D3 en el modelo
+        board_pos += 1
+        
+    return board_pos
 
 class ModelHandler:
     def __init__(self, checkpoint_path=None, probs_plot=None):
@@ -70,14 +117,31 @@ class ModelHandler:
         """
         if self.model is None:
             return {}
-        
-        # Convertir la secuencia de movimientos a un tensor
-        x = torch.tensor(move_history, dtype=torch.long).unsqueeze(0)  # shape [1, seq_len]
-        
-        # Obtener los logits (valores pre-softmax) del modelo
-        with torch.no_grad():
-            logits, _ = self.model(x)
-        
+            
+        try:
+            # Convertir movimientos del formato tablero al formato del modelo
+            model_moves = []
+            for move in move_history:
+                model_move = board_to_model_index(move)
+                if model_move is not None:
+                    model_moves.append(model_move)
+            
+            # Si tenemos más de 59 movimientos, usar solo los últimos 59
+            # (el modelo está entrenado para recibir 59 movimientos y predecir el siguiente)
+            if len(model_moves) > 59:
+                print("Usando los últimos 59 movimientos del historial")
+                model_moves = model_moves[-59:]
+                    
+            # Convertir la secuencia de movimientos a un tensor
+            x = torch.tensor(model_moves, dtype=torch.long).unsqueeze(0)  # shape [1, seq_len]
+            
+            # Obtener los logits (valores pre-softmax) del modelo
+            with torch.no_grad():
+                logits, _ = self.model(x)
+        except Exception as e:
+            print(f"Error al procesar movimientos: {e}")
+            print("Movimientos:", move_history)
+            return {}
         # Obtener las probabilidades para la última posición
         logits = logits[:, -1, :]  # shape [1, vocab_size]
         probs = F.softmax(logits, dim=-1)  # shape [1, vocab_size]
@@ -86,12 +150,17 @@ class ModelHandler:
         probs = probs[0].numpy()  # shape [vocab_size]
         
         # Crear diccionario de jugadas y probabilidades
-        # Ajustamos el rango para que coincida con el tamaño del vocabulario
         move_probs = {}
-        for pos in range(len(probs)):  # Usamos len(probs) para evitar índices fuera de rango
-            row, col = pos // 8, pos % 8
-            coord = f"{chr(97 + row)}{col + 1}"  # Por ejemplo, "a1", "b2", etc.
-            move_probs[coord] = probs[pos]
+        
+        # Convertir las probabilidades del formato del modelo al formato del tablero
+        # Ignoramos la posición 0 que representa "pass"
+        for model_pos in range(1, len(probs)):  # Empezamos en 1 para saltar el "pass"
+            board_pos = model_to_board_index(model_pos)
+            if board_pos is not None:
+                row = board_pos // 8
+                col = board_pos % 8
+                coord = f"{chr(97 + row)}{col + 1}"  # Por ejemplo, "a1", "b2", etc.
+                move_probs[coord] = float(probs[model_pos])  # Convertir a float para evitar problemas con numpy
         
         return move_probs
         
@@ -108,3 +177,26 @@ class ModelHandler:
         # Actualizar el gráfico si está disponible
         if self.probs_plot is not None:
             self.probs_plot.update(move_probs)
+    
+    def get_best_move(self, move_probs, valid_moves):
+        """
+        Obtiene la jugada con mayor probabilidad entre los movimientos válidos.
+        
+        Args:
+            move_probs: Diccionario con las coordenadas de las jugadas y sus probabilidades.
+            valid_moves: Lista de movimientos válidos (índices 0-63).
+        
+        Returns:
+            La jugada válida con mayor probabilidad como índice numérico (0-63).
+        """
+        # Convertir movimientos válidos a coordenadas
+        valid_coords = [permit_reverse(move) for move in valid_moves]
+        
+        # Filtrar probabilidades para solo considerar movimientos válidos
+        valid_probs = {coord: prob for coord, prob in move_probs.items() if coord in valid_coords}
+        
+        if not valid_probs:
+            return None
+            
+        best_coord = max(valid_probs, key=valid_probs.get)
+        return permit(best_coord)

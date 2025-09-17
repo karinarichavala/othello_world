@@ -49,6 +49,9 @@ class GameGUI:
                                      font=("Arial", 14), bg=self.board_color)
         self.message_label.pack(pady=10)
         
+        # Historial de jugadas
+        self.move_history = []
+        
         # Actualiza la visualización del tablero
         self.update_board()
     
@@ -147,17 +150,92 @@ class GameGUI:
                 self.make_move(move)
     
     def make_move(self, move):
-        """Realiza un movimiento en la posición dada"""
-        # Actualizar el estado del tablero
+        """Realiza un movimiento en la posición dada y obtiene la respuesta del modelo"""
+        # Actualizar el estado del tablero con la jugada del jugador (negro)
         self.board_state.update([move])
+        
+        # Registrar la jugada en el historial
+        self.record_move(move)
         
         # Actualizar la visualización
         self.update_board()
         
-        # Si hay un callback, llamarlo con el estado actual y el movimiento
+        # Si hay un modelo, obtener y realizar su jugada (blanco)
         if self.callback:
-            move_history = [move]  # Aquí deberías mantener el historial completo de movimientos
-            self.callback(self.board_state.board, move_history)
+            # Obtener las jugadas válidas para el modelo
+            self.board_state.next_hand_color = -1  # Cambiar a blanco para obtener sus movimientos válidos
+            valid_moves = self.board_state.get_valid_moves()
+            
+            if valid_moves:  # Si hay movimientos válidos disponibles
+                # Obtener probabilidades y la mejor jugada
+                move_probs = self.callback.get_move_probabilities(self.move_history)
+                best_move_index = self.callback.get_best_move(move_probs, valid_moves)
+                
+                if best_move_index is not None:
+                    # Realizar la jugada del modelo
+                    self.board_state.update([best_move_index])
+                    self.record_move(best_move_index)
+                    
+                    # Actualizar la visualización y las probabilidades
+                    self.update_board()
+                    self.callback.update_probabilities(self.move_history)
+    
+    def record_move(self, move):
+        """
+        Registra una jugada en el historial.
+        
+        Args:
+            move: La jugada realizada (índice de 0 a 63).
+        """
+        # Validar que el movimiento esté en el rango correcto
+        if not (0 <= move < 64):
+            print(f"Error: Movimiento fuera de rango: {move}")
+            return
+            
+        self.move_history.append(move)
+    
+    def player_move(self, move):
+        """
+        Maneja la jugada del jugador y actualiza el tablero.
+        
+        Args:
+            move: La jugada realizada por el jugador (índice de 0 a 63).
+        """
+        # Verificar si es un movimiento válido
+        valid_moves = self.board_state.get_valid_moves()
+        if move not in valid_moves:
+            print(f"Movimiento inválido: {move}")
+            return
+            
+        # Registrar la jugada del jugador
+        self.record_move(move)
+        
+        # Actualizar el tablero con la jugada del jugador
+        self.board_state.update([move])
+        self.update_board()
+        
+        # Llamar al modelo para obtener la siguiente jugada
+        if self.callback:
+            # Obtener las jugadas válidas para el modelo
+            self.board_state.next_hand_color = -1  # Cambiar a blanco para obtener sus movimientos válidos
+            valid_moves = self.board_state.get_valid_moves()
+            
+            if valid_moves:  # Si hay movimientos válidos disponibles
+                # Obtener probabilidades y la mejor jugada
+                move_probs = self.callback.get_move_probabilities(self.move_history)
+                best_move = self.callback.get_best_move(move_probs, valid_moves)
+                
+                if best_move is not None:
+                    # Registrar la jugada del modelo
+                    self.record_move(best_move)
+                    
+                    # Actualizar el tablero con la jugada del modelo
+                    self.board_state.update([best_move])
+                    self.update_board()
+                    
+                    # Actualizar las probabilidades
+                    if hasattr(self.callback, 'update_probabilities'):
+                        self.callback.update_probabilities(self.move_history)
     
     def run(self):
         """Ejecuta el bucle principal de la interfaz"""
