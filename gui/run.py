@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # Crear el manejador del modelo
     model_handler = ModelHandler(checkpoint_path, probs_plot)
     
-    # Inicializa la GUI del juego con el callback para realizar jugadas automáticas
+    # Inicializa la GUI del juego con el manejador del modelo completo
     game_gui = GameGUI(callback=model_handler)
     
     # Ejecutar la interfaz

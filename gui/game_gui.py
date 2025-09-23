@@ -52,31 +52,49 @@ class GameGUI:
         # Historial de jugadas
         self.move_history = []
         
+        # Variable para trackear el último movimiento de la IA
+        self.last_ai_move = None
+        self.ai_highlight_timer = None
+        
         # Actualiza la visualización del tablero
         self.update_board()
     
     def create_board(self):
-        """Crea el canvas del tablero"""
+        """Crea el canvas del tablero con etiquetas de filas y columnas"""
         board_width = 8 * self.cell_size
         board_height = 8 * self.cell_size
-        
-        self.canvas = tk.Canvas(self.window, width=board_width, height=board_height, 
+
+        self.canvas = tk.Canvas(self.window, width=board_width + 40, height=board_height + 40, 
                               background=self.board_color)
         self.canvas.pack(padx=20, pady=20)
-        
+
+        # Vincular el evento de clic al canvas
+        self.canvas.bind("<Button-1>", self.handle_click)
+
         # Dibujar las líneas del tablero
         for i in range(9):
             # Líneas horizontales
-            self.canvas.create_line(0, i * self.cell_size, 
-                                  board_width, i * self.cell_size, 
+            self.canvas.create_line(40, i * self.cell_size + 40, 
+                                  board_width + 40, i * self.cell_size + 40, 
                                   fill=self.line_color)
             # Líneas verticales
-            self.canvas.create_line(i * self.cell_size, 0, 
-                                  i * self.cell_size, board_height, 
+            self.canvas.create_line(i * self.cell_size + 40, 40, 
+                                  i * self.cell_size + 40, board_height + 40, 
                                   fill=self.line_color)
-        
-        # Manejar clics del usuario
-        self.canvas.bind("<Button-1>", self.handle_click)
+
+        # Etiquetas de filas y columnas
+        rows = ["a", "b", "c", "d", "e", "f", "g", "h"]
+        columns = ["1", "2", "3", "4", "5", "6", "7", "8"]
+
+        # Etiquetas de filas (letras)
+        for i, row in enumerate(rows):
+            self.canvas.create_text(20, i * self.cell_size + self.cell_size // 2 + 40, 
+                                    text=row, font=("Arial", 12), fill="white")
+
+        # Etiquetas de columnas (números)
+        for i, col in enumerate(columns):
+            self.canvas.create_text(i * self.cell_size + self.cell_size // 2 + 40, 20, 
+                                    text=col, font=("Arial", 12), fill="white")
     
     def update_board(self):
         """Actualiza la visualización del tablero según el estado actual"""
@@ -89,22 +107,33 @@ class GameGUI:
                 cell_value = self.board_state.state[i, j]
                 if cell_value != 0:  # Si hay una ficha
                     color = "black" if cell_value == 1 else "white"
-                    x = j * self.cell_size + self.cell_size // 2
-                    y = i * self.cell_size + self.cell_size // 2
+                    
+                    # Verificar si esta posición es el último movimiento de la IA
+                    current_pos = i * 8 + j
+                    if current_pos == self.last_ai_move:
+                        # Resaltar el último movimiento de la IA con celeste
+                        outline_color = "cyan"
+                        outline_width = 4
+                    else:
+                        outline_color = "black"
+                        outline_width = 1
+                    
+                    x = j * self.cell_size + self.cell_size // 2 + 40
+                    y = i * self.cell_size + self.cell_size // 2 + 40
                     self.canvas.create_oval(
                         x - self.cell_size * 0.4, 
                         y - self.cell_size * 0.4,
                         x + self.cell_size * 0.4, 
                         y + self.cell_size * 0.4,
-                        fill=color, tags="piece"
+                        fill=color, outline=outline_color, width=outline_width, tags="piece"
                     )
-        
+
         # Mostrar movimientos válidos
         valid_moves = self.board_state.get_valid_moves()
         for move in valid_moves:
             row, col = move // 8, move % 8
-            x = col * self.cell_size + self.cell_size // 2
-            y = row * self.cell_size + self.cell_size // 2
+            x = col * self.cell_size + self.cell_size // 2 + 40
+            y = row * self.cell_size + self.cell_size // 2 + 40
             self.canvas.create_oval(
                 x - self.cell_size * 0.1, 
                 y - self.cell_size * 0.1,
@@ -119,66 +148,91 @@ class GameGUI:
         
         # Verificar si el juego ha terminado
         if not valid_moves:
-            # Cambiar de jugador para ver si hay movimientos
-            self.board_state.next_hand_color *= -1
-            if not self.board_state.get_valid_moves():
-                # Si ningún jugador puede mover, el juego ha terminado
-                black_count = np.sum(self.board_state.state == 1)
-                white_count = np.sum(self.board_state.state == -1)
-                if black_count > white_count:
-                    winner = "Negro"
-                elif white_count > black_count:
-                    winner = "Blanco"
-                else:
-                    winner = "Empate"
-                self.message_label.config(text=f"Juego terminado. Ganador: {winner}")
-            else:
-                self.message_label.config(text=f"No hay movimientos. Turno: {current_player}")
+            self.check_game_over()
     
     def handle_click(self, event):
-        """Maneja el clic del usuario en el tablero"""
-        # Convertir las coordenadas del clic a posición del tablero
-        col = event.x // self.cell_size
-        row = event.y // self.cell_size
-        
-        if 0 <= col < 8 and 0 <= row < 8:
+        """Maneja el clic en el tablero para realizar una jugada."""
+        # Calcular la fila y columna según la posición del clic
+        col = (event.x - 40) // self.cell_size
+        row = (event.y - 40) // self.cell_size
+
+        # Verificar si la posición está dentro del tablero
+        if 0 <= row < 8 and 0 <= col < 8:
             move = row * 8 + col
-            valid_moves = self.board_state.get_valid_moves()
-            
-            if move in valid_moves:
-                # Realizar el movimiento
+
+            # Verificar si el movimiento es válido
+            if move in self.board_state.get_valid_moves():
+                # Usar el método make_move que maneja la alternancia con la IA
                 self.make_move(move)
-    
+
     def make_move(self, move):
         """Realiza un movimiento en la posición dada y obtiene la respuesta del modelo"""
+        # Verificar si es un movimiento válido
+        valid_moves = self.board_state.get_valid_moves()
+        if move not in valid_moves:
+            print(f"Movimiento inválido: {move}")
+            return
+            
         # Actualizar el estado del tablero con la jugada del jugador (negro)
         self.board_state.update([move])
-        
-        # Registrar la jugada en el historial
         self.record_move(move)
-        
-        # Actualizar la visualización
         self.update_board()
         
-        # Si hay un modelo, obtener y realizar su jugada (blanco)
-        if self.callback:
-            # Obtener las jugadas válidas para el modelo
-            self.board_state.next_hand_color = -1  # Cambiar a blanco para obtener sus movimientos válidos
-            valid_moves = self.board_state.get_valid_moves()
+        # Si no hay modelo o el juego ha terminado, no hacer nada más
+        if not self.callback:
+            return
             
-            if valid_moves:  # Si hay movimientos válidos disponibles
-                # Obtener probabilidades y la mejor jugada
-                move_probs = self.callback.get_move_probabilities(self.move_history)
-                best_move_index = self.callback.get_best_move(move_probs, valid_moves)
-                
-                if best_move_index is not None:
-                    # Realizar la jugada del modelo
-                    self.board_state.update([best_move_index])
-                    self.record_move(best_move_index)
-                    
-                    # Actualizar la visualización y las probabilidades
-                    self.update_board()
-                    self.callback.update_probabilities(self.move_history)
+        # Obtener las jugadas válidas para el modelo
+        self.board_state.next_hand_color = -1  # Cambiar a blanco para obtener sus movimientos válidos
+        valid_moves = self.board_state.get_valid_moves()
+        
+        # Si no hay movimientos válidos, verificar si el juego ha terminado
+        if not valid_moves:
+            self.check_game_over()
+            return
+            
+        # Obtener y realizar la jugada del modelo
+        move_probs = self.callback.get_move_probabilities(self.move_history)
+        best_move = self.callback.get_best_move(move_probs, valid_moves)
+        
+        if best_move is not None:
+            # Mostrar mensaje de "IA pensando..."
+            current_player = "Negro" if self.board_state.next_hand_color == 1 else "Blanco"
+            self.message_label.config(text="IA pensando...")
+            self.window.update()  # Forzar actualización de la GUI
+            
+            # Pausa para simular que la IA está "pensando"
+            self.window.after(1000, lambda: self._complete_ai_move(best_move))
+        else:
+            # Si no hay movimiento válido, continuar
+            self.check_game_over()
+    
+    def _complete_ai_move(self, best_move):
+        """Completa el movimiento de la IA después de la pausa"""
+        # Realizar el movimiento
+        self.board_state.update([best_move])
+        self.record_move(best_move)
+        
+        # Marcar este movimiento como el último de la IA
+        self.last_ai_move = best_move
+        
+        # Actualizar el tablero
+        self.update_board()
+        self.callback.update_probabilities(self.move_history)
+        
+        # Programar quitar el resaltado después de 3 segundos
+        if self.ai_highlight_timer:
+            self.window.after_cancel(self.ai_highlight_timer)
+        self.ai_highlight_timer = self.window.after(3000, self._clear_ai_highlight)
+        
+        # Verificar si el juego ha terminado después de la jugada del modelo
+        if not self.board_state.get_valid_moves():
+            self.check_game_over()
+    
+    def _clear_ai_highlight(self):
+        """Quita el resaltado del último movimiento de la IA"""
+        self.last_ai_move = None
+        self.update_board()
     
     def record_move(self, move):
         """
@@ -194,48 +248,31 @@ class GameGUI:
             
         self.move_history.append(move)
     
-    def player_move(self, move):
-        """
-        Maneja la jugada del jugador y actualiza el tablero.
+    def check_game_over(self):
+        """Verifica si el juego ha terminado y actualiza el mensaje correspondiente"""
+        # Cambiar al otro jugador para ver si tiene movimientos
+        self.board_state.next_hand_color *= -1
+        other_player_moves = self.board_state.get_valid_moves()
         
-        Args:
-            move: La jugada realizada por el jugador (índice de 0 a 63).
-        """
-        # Verificar si es un movimiento válido
-        valid_moves = self.board_state.get_valid_moves()
-        if move not in valid_moves:
-            print(f"Movimiento inválido: {move}")
-            return
+        if not other_player_moves:
+            # Si ningún jugador puede mover, el juego ha terminado
+            black_count = np.sum(self.board_state.state == 1)
+            white_count = np.sum(self.board_state.state == -1)
             
-        # Registrar la jugada del jugador
-        self.record_move(move)
-        
-        # Actualizar el tablero con la jugada del jugador
-        self.board_state.update([move])
-        self.update_board()
-        
-        # Llamar al modelo para obtener la siguiente jugada
-        if self.callback:
-            # Obtener las jugadas válidas para el modelo
-            self.board_state.next_hand_color = -1  # Cambiar a blanco para obtener sus movimientos válidos
-            valid_moves = self.board_state.get_valid_moves()
-            
-            if valid_moves:  # Si hay movimientos válidos disponibles
-                # Obtener probabilidades y la mejor jugada
-                move_probs = self.callback.get_move_probabilities(self.move_history)
-                best_move = self.callback.get_best_move(move_probs, valid_moves)
+            if black_count > white_count:
+                winner = "Negro"
+            elif white_count > black_count:
+                winner = "Blanco"
+            else:
+                winner = "Empate"
                 
-                if best_move is not None:
-                    # Registrar la jugada del modelo
-                    self.record_move(best_move)
-                    
-                    # Actualizar el tablero con la jugada del modelo
-                    self.board_state.update([best_move])
-                    self.update_board()
-                    
-                    # Actualizar las probabilidades
-                    if hasattr(self.callback, 'update_probabilities'):
-                        self.callback.update_probabilities(self.move_history)
+            self.message_label.config(text=f"Juego terminado. Ganador: {winner} ({black_count}-{white_count})")
+            return True
+            
+        # Si el otro jugador tiene movimientos, actualizar el mensaje
+        current_player = "Negro" if self.board_state.next_hand_color == 1 else "Blanco"
+        self.message_label.config(text=f"Turno: {current_player}")
+        return False
     
     def run(self):
         """Ejecuta el bucle principal de la interfaz"""

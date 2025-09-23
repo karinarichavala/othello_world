@@ -85,7 +85,7 @@ class Block(nn.Module):
             nn.Linear(config.n_embd, 4 * config.n_embd),
             nn.GELU(),
             nn.Linear(4 * config.n_embd, config.n_embd),
-            nn.Dropout(config.resid_pdrop),
+            nn.Dropout(config.resid_pdrop), ###diagrama
         )
 
     def forward(self, x, return_att=False, only_last=-1):
