@@ -54,17 +54,19 @@ def model_to_board_index(model_pos):
     return board_pos
 
 class ModelHandler:
-    def __init__(self, checkpoint_path=None, probs_plot=None):
+    def __init__(self, checkpoint_path=None, probs_plot=None, probability_heatmap=None):
         """
         Inicializa el manejador del modelo Othello-GPT.
         
         Args:
             checkpoint_path: Ruta al checkpoint del modelo pre-entrenado.
                            Si es None, no se cargará ningún modelo.
-            probs_plot: Referencia al objeto ProbsPlot para actualizar el gráfico.
+            probs_plot: Referencia al objeto ProbsPlot para actualizar el gráfico de barras.
+            probability_heatmap: Referencia al objeto ProbabilityHeatmap para el tablero.
         """
         self.model = None
         self.probs_plot = probs_plot
+        self.probability_heatmap = probability_heatmap
         
         if checkpoint_path:
             try:
@@ -174,9 +176,12 @@ class ModelHandler:
         # Obtener las probabilidades del modelo
         move_probs = self.get_move_probabilities(move_history)
         
-        # Actualizar el gráfico si está disponible
+        # Actualizar ambos gráficos si están disponibles
         if self.probs_plot is not None:
             self.probs_plot.update(move_probs)
+        
+        if self.probability_heatmap is not None:
+            self.probability_heatmap.update(move_probs)
     
     def get_best_move(self, move_probs, valid_moves):
         """
