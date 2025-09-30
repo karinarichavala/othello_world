@@ -27,7 +27,8 @@ class GPTConfig:
         self.block_size = block_size
         for k,v in kwargs.items():
             setattr(self, k, v)
-
+#CONFIGURACIÓN DE LA ATENCIÓN
+#Masked Multi-Head Self-Attention
 class CausalSelfAttention(nn.Module):
     """
     A vanilla multi-head masked self-attention layer with a projection at the end.
@@ -104,14 +105,20 @@ class GPT(nn.Module):
         super().__init__()
 
         # input embedding stem
-        self.tok_emb = nn.Embedding(config.vocab_size, config.n_embd)
+        #token embeding
+        self.tok_emb = nn.Embedding(config.vocab_size, config.n_embd) 
+        #posicitional encoding
         self.pos_emb = nn.Parameter(torch.zeros(1, config.block_size, config.n_embd))
         self.drop = nn.Dropout(config.embd_pdrop)
         # transformer
         self.blocks = nn.Sequential(*[Block(config) for _ in range(config.n_layer)])
         self.n_layer = config.n_layer
         # decoder head
+        #7. Proyección Lineal Final
+        # # 1. LayerNorm final
         self.ln_f = nn.LayerNorm(config.n_embd)
+        ## 2. Proyección lineal 
+        # representaciones de 512 dimensiones a 61 logits (uno por cada jugada posible + "pass")
         self.head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
         self.block_size = config.block_size

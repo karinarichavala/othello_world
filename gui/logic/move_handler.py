@@ -42,7 +42,7 @@ class MoveHandler:
         
         # Actualizar probabilidades después del movimiento del jugador
         if self.callback:
-            self.callback.update_probabilities(self.game_state.move_history)
+            self.callback.update_probabilities(self.game_state.move_history, self.board_state.state)
         
         return True
     
@@ -121,7 +121,7 @@ class MoveHandler:
             
             # Actualizar probabilidades si hay callback
             if self.callback:
-                self.callback.update_probabilities(self.game_state.move_history)
+                self.callback.update_probabilities(self.game_state.move_history, self.board_state.state)
             
             # Limpiar las probabilidades guardadas
             self._last_move_probs = None

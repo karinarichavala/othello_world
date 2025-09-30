@@ -54,7 +54,7 @@ def model_to_board_index(model_pos):
     return board_pos
 
 class ModelHandler:
-    def __init__(self, checkpoint_path=None, probs_plot=None, probability_heatmap=None):
+    def __init__(self, checkpoint_path=None, probs_plot=None, probability_heatmap=None, game_heatmap=None):
         """
         Inicializa el manejador del modelo Othello-GPT.
         
@@ -63,10 +63,12 @@ class ModelHandler:
                            Si es None, no se cargará ningún modelo.
             probs_plot: Referencia al objeto ProbsPlot para actualizar el gráfico de barras.
             probability_heatmap: Referencia al objeto ProbabilityHeatmap para el tablero.
+            game_heatmap: Referencia al objeto GameHeatmap integrado con fichas.
         """
         self.model = None
         self.probs_plot = probs_plot
         self.probability_heatmap = probability_heatmap
+        self.game_heatmap = game_heatmap
         
         if checkpoint_path:
             try:
@@ -166,22 +168,26 @@ class ModelHandler:
         
         return move_probs
         
-    def update_probabilities(self, move_history):
+    def update_probabilities(self, move_history, board_state=None):
         """
         Actualiza el gráfico de probabilidades basado en el estado actual del tablero.
         
         Args:
             move_history: Historial de movimientos hasta ahora
+            board_state: Estado actual del tablero (array de 64 elementos: 0=vacío, 1=negro, 2=blanco)
         """
         # Obtener las probabilidades del modelo
         move_probs = self.get_move_probabilities(move_history)
         
-        # Actualizar ambos gráficos si están disponibles
+        # Actualizar todos los gráficos si están disponibles
         if self.probs_plot is not None:
             self.probs_plot.update(move_probs)
         
         if self.probability_heatmap is not None:
             self.probability_heatmap.update(move_probs)
+            
+        if self.game_heatmap is not None:
+            self.game_heatmap.update(move_probs, board_state)
     
     def get_best_move(self, move_probs, valid_moves):
         """
