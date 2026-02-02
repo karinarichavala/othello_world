@@ -3,7 +3,6 @@ Script para verificar archivos .npy de activaciones extraídas
 """
 
 import numpy as np
-import sys
 from pathlib import Path
 
 def verify_activations(filepath):

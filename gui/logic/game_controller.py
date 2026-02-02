@@ -1,14 +1,6 @@
 # game_controller.py
 # Controlador principal que coordina toda la lógica del juego
 
-import os
-import sys
-
-# Agregamos el directorio raíz al path
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
-
 from data.othello import OthelloBoardState
 from gui.logic.game_state import GameState
 from gui.logic.navigation import NavigationController

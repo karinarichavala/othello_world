@@ -2,13 +2,6 @@
 # Componente para el renderizado del tablero
 
 import tkinter as tk
-import os
-import sys
-
-# Agregamos el directorio raíz al path
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
 
 from gui.config.settings import *
 

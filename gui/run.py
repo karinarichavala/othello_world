@@ -2,11 +2,6 @@
 # Script para ejecutar la interfaz de Othello desde la carpeta gui
 
 import os
-import sys
-
-# Aseguramos que el directorio raíz del proyecto esté en el path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 
 # Importamos los módulos necesarios desde gui
 from gui.game_gui import GameGUI
@@ -15,7 +10,9 @@ from gui.probability_heatmap import ProbabilityHeatmap
 from gui.game_heatmap import GameHeatmap
 from gui.model_handler import ModelHandler
 
-if __name__ == "__main__":
+
+def main():
+    """Entry point for GUI application"""
     # Ruta al checkpoint del modelo pre-entrenado
     checkpoint_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ckpts", "gpt_championship.ckpt")
     
@@ -32,3 +29,7 @@ if __name__ == "__main__":
     
     # Ejecutar la interfaz
     game_gui.run()
+
+
+if __name__ == "__main__":
+    main()

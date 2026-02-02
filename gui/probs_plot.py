@@ -7,13 +7,6 @@ matplotlib.use('TkAgg')  # Usar TkAgg como backend para mostrar dentro de Tkinte
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
-import sys
-import os
-
-# Agregamos el directorio raíz al path para poder importar módulos del proyecto
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
 
 # Importamos las funciones necesarias
 from data.othello import permit, permit_reverse

@@ -2,13 +2,6 @@
 # Interfaz gráfica para jugar Othello (refactorizada)
 
 import tkinter as tk
-import sys
-import os
-
-# Agregamos el directorio raíz al path para poder importar módulos del proyecto
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
 
 # Importamos las clases y funciones necesarias
 from gui.logic.game_controller import GameController

@@ -3,14 +3,8 @@ Script principal para extraer activaciones del modelo Othello-GPT
 """
 
 import os
-import sys
 import torch
 import numpy as np
-
-# Agregar el directorio raíz al path
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
 
 from sae.activations.config import ExtractionConfig
 from sae.activations.extractor import ActivationExtractor

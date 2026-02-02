@@ -1,14 +1,6 @@
 # game_state.py
 # Manejo del estado del juego y historial de movimientos
 
-import os
-import sys
-
-# Agregamos el directorio raíz al path
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
-
 from data.othello import permit_reverse
 
 
