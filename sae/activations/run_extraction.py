@@ -10,6 +10,7 @@ from sae.activations.config import ExtractionConfig
 from sae.activations.extractor import ActivationExtractor
 from sae.activations.batch_processor import BatchProcessor
 from sae.activations.tokenizer import OthelloTokenizer
+from sae.activations.game_utils import save_games_to_file, get_games_filepath
 from mingpt.model import GPT, GPTConfig
 from data.othello import Othello
 
@@ -63,6 +64,10 @@ def extract_from_memory(config, model):
     othello_data = Othello(ood_num=config.num_games)
     print(f"✓ {len(othello_data.sequences)} partidas generadas")
     
+    # Guardar partidas en archivo (nombre dinámico)
+    games_filepath = get_games_filepath(config)
+    save_games_to_file(othello_data.sequences, games_filepath)
+    
     # Tokenizar secuencias
     print(f"🔤 Tokenizando secuencias...")
     tokenizer = OthelloTokenizer(othello_data)
@@ -82,33 +87,19 @@ def extract_from_file(config, model):
     Ruta segura: Generar → Buscar archivo → Procesar por lotes
     Para num_games > 1000
     """
-    print("\n MODO SEGURO: Usando archivo + procesamiento por lotes")
+    print("\n💾 MODO SEGURO: Usando archivo + procesamiento por lotes")
     
-    # Crear carpeta si no existe
-    os.makedirs("data/othello_synthetic", exist_ok=True)
-    
-    # Generar partidas (se guarda automáticamente)
-    print(f" Generando {config.num_games} partidas sintéticas...")
+    # Generar partidas
+    print(f"🎮 Generando {config.num_games} partidas sintéticas...")
     othello_data = Othello(ood_num=config.num_games)
-    print(f"✓ {len(othello_data.sequences)} partidas generadas y guardadas")
+    print(f"✓ {len(othello_data.sequences)} partidas generadas")
     
-    # Buscar el archivo más reciente
-    batch_processor = BatchProcessor(None, config.batch_size_games)
-    games_file = batch_processor.find_latest_games_file()
-    
-    if not games_file:
-        raise FileNotFoundError(
-            "No se encontró el archivo de partidas generado en data/othello_synthetic/. "
-            "Verifica que la carpeta exista y tenga permisos de escritura."
-        )
-    
-    print(f" Archivo encontrado: {games_file}")
-    
-    # Cargar partidas desde archivo
-    games = batch_processor.load_games_from_file(games_file)
+    # Guardar partidas en archivo (nombre dinámico)
+    games_filepath = get_games_filepath(config)
+    save_games_to_file(othello_data.sequences, games_filepath)
     
     # Tokenizar secuencias
-    print(f" Tokenizando {len(games)} secuencias...")
+    print(f"\n🔤 Tokenizando {len(othello_data.sequences)} secuencias...")
     tokenizer = OthelloTokenizer(othello_data)
     tokenized_games = tokenizer.tokenize_all()
     print(f"✓ {len(tokenized_games)} secuencias tokenizadas")

@@ -23,9 +23,9 @@ def identificador(tablero, color_jugador):
     Args:
         tablero (np.ndarray): Array 8x8 representando el tablero.
             - 0: casilla vacía
-            - 1: ficha blanca
-            - -1: ficha negra
-        color_jugador (int): Color del jugador actual (1 para blancas, -1 para negras)
+            - 1: ficha negra (estándar de OthelloBoardState)
+            - -1: ficha blanca (estándar de OthelloBoardState)
+        color_jugador (int): Color del jugador actual (1 para negras, -1 para blancas)
     
     Returns:
         dict[str, bool]: Diccionario con las 198 BSPs. Claves en formato:
@@ -38,8 +38,9 @@ def identificador(tablero, color_jugador):
     
     Ejemplo:
         >>> tablero = np.zeros((8, 8))
-        >>> tablero[3:5, 3:5] = [[1, -1], [-1, 1]]  # Configuración inicial
-        >>> bsps = identificador(tablero, color_jugador=1)
+        >>> tablero[3, 4] = 1; tablero[4, 3] = 1  # Negras
+        >>> tablero[3, 3] = -1; tablero[4, 4] = -1  # Blancas
+        >>> bsps = identificador(tablero, color_jugador=1)  # Perspectiva de negras
         >>> bsps['BSPD40']  # D4 vacía
         False
         >>> bsps['BSP_INICIAL']
@@ -116,9 +117,9 @@ def imprimir_tablero(tablero):
         print(f"{fila} |", end="")
         for j in range(8):
             if tablero[i, j] == 1:
-                print("●", end=" ")  # Blanca
+                print("●", end=" ")  # Negra (1 = black en OthelloBoardState)
             elif tablero[i, j] == -1:
-                print("○", end=" ")  # Negra
+                print("○", end=" ")  # Blanca (-1 = white en OthelloBoardState)
             else:
                 print("·", end=" ")  # Vacía
         print("|")
