@@ -33,8 +33,9 @@ class GameGUI:
         # Callback para actualizar el gráfico de probabilidades
         self.callback = callback
         
-        # Variables para el temporizador de resaltado de la IA
+        # Variables para los temporizadores
         self.ai_highlight_timer = None
+        self.ai_thinking_timer = None
         
         # Crear el tablero
         self.create_board()
@@ -184,6 +185,13 @@ class GameGUI:
                 pass  # Si el temporizador ya expiró, ignorar
             self.ai_highlight_timer = None
         
+        if self.ai_thinking_timer:
+            try:
+                self.window.after_cancel(self.ai_thinking_timer)
+            except:
+                pass
+            self.ai_thinking_timer = None
+        
         self.update_board()
         self.update_navigation_buttons()
     
@@ -269,13 +277,25 @@ class GameGUI:
             self.window.update()  # Forzar actualización de la GUI
             
             # Pausa para simular que la IA está "pensando"
-            self.window.after(AI_THINKING_DELAY, lambda: self._complete_ai_move(ai_result['move']))
+            # Usar método en lugar de lambda para evitar errores al cerrar ventana
+            ai_move = ai_result['move']
+            self.ai_thinking_timer = self.window.after(AI_THINKING_DELAY, lambda m=ai_move: self._safe_complete_ai_move(m))
         else:
             # No hay movimiento de IA, verificar si el juego terminó
             game_over_info = ai_result.get('game_over_info', {})
             if game_over_info.get('game_over', False):
                 winner_info = f"Juego terminado. Ganador: {game_over_info['winner']} ({game_over_info['black_count']}-{game_over_info['white_count']})"
                 self.message_label.config(text=winner_info)
+    
+    def _safe_complete_ai_move(self, ai_move):
+        """Wrapper seguro para _complete_ai_move que verifica la ventana"""
+        try:
+            if hasattr(self, 'window') and self.window.winfo_exists():
+                self._complete_ai_move(ai_move)
+        except tk.TclError:
+            pass  # Ventana ya destruida
+        finally:
+            self.ai_thinking_timer = None
     
     def _complete_ai_move(self, ai_move):
         """Completa el movimiento de la IA después de la pausa"""
@@ -367,6 +387,14 @@ class GameGUI:
                 self.ai_highlight_timer = None
         except:
             pass  # Ignorar errores al cancelar timers
+        
+        try:
+            # Cancelar timer de "IA pensando" si está activo
+            if self.ai_thinking_timer:
+                self.window.after_cancel(self.ai_thinking_timer)
+                self.ai_thinking_timer = None
+        except:
+            pass
         
         # Destruir la ventana
         self.window.destroy()

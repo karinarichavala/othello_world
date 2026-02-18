@@ -70,7 +70,7 @@ def reconstruct_board_states_from_games(games_filepath: str, output_filepath: st
     # Convertir a array numpy
     # Si hay diferentes longitudes, rellenar con ceros o truncar a la longitud mínima
     if min_len != max_len:
-        print(f"⚠️  Las partidas tienen diferentes longitudes, usando longitud mínima: {min_len}")
+        print(f"  Las partidas tienen diferentes longitudes, usando longitud mínima: {min_len}")
         all_board_states = [game[:min_len] for game in all_board_states]
     
     board_states = np.array(all_board_states)  # Shape: (n_games, n_moves, 8, 8)
@@ -97,7 +97,7 @@ def main():
     # Rutas por defecto
     project_root = Path(__file__).parent.parent.parent
     games_file = project_root / "sae" / "activations" / "data" / "games_200.txt"
-    output_file = project_root / "sae" / "metrics" / "data" / "board_states_200games.npy"
+    output_file = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npy"
     
     print("=" * 60)
     print("Generación de Estados de Tablero desde Partidas Sintéticas")

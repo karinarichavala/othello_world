@@ -35,23 +35,23 @@ def main():
     print("=" * 60)
     
     # Cargar tableros reconstruidos
-    boards_path = project_root / "sae" / "metrics" / "data" / "board_states_200games.npy"
+    boards_path = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npy"
     boards = np.load(boards_path)
     
-    print(f"\n📊 Información del array:")
+    print(f"\n Información del array:")
     print(f"   Shape: {boards.shape}")
     print(f"   Dtype: {boards.dtype}")
     print(f"   Valores únicos: {np.unique(boards)}")
     print(f"   Memoria: {boards.nbytes / (1024**2):.2f} MB")
     
     # Verificar primera partida
-    print(f"\n🎮 PARTIDA 0 - Primeros 5 movimientos:")
+    print(f"\n PARTIDA 0 - Primeros 5 movimientos:")
     print("=" * 60)
     
     for move_idx in range(5):
         board = boards[0, move_idx]
         
-        print(f"\n📍 Después del movimiento {move_idx + 1}:")
+        print(f"\n Después del movimiento {move_idx + 1}:")
         visualize_board(board)
         
         # Contar piezas
@@ -62,7 +62,7 @@ def main():
         print(f"   Negras (●): {black_count}, Blancas (○): {white_count}, Vacías (·): {empty_count}")
     
     # Probar bsp_identifier con el tablero del movimiento 5
-    print(f"\n🔍 Verificar compatibilidad con bsp_identifier:")
+    print(f"\n Verificar compatibilidad con bsp_identifier:")
     print("=" * 60)
     
     test_board = boards[0, 4]  # Movimiento 5
@@ -82,7 +82,7 @@ def main():
     print(f"   ✓ BSPs activos (=1): {np.sum(bsps_blanco == 1)}")
     
     # Verificar algunas partidas más
-    print(f"\n📈 Verificación estadística (primeras 10 partidas):")
+    print(f"\n Verificación estadística (primeras 10 partidas):")
     print("=" * 60)
     
     for game_idx in range(10):
@@ -96,7 +96,7 @@ def main():
         print(f"   Partida {game_idx}: {black_count} negras, {white_count} blancas (total: {total})")
     
     print(f"\n" + "=" * 60)
-    print("✅ Verificación completada - Los tableros tienen el formato correcto")
+    print(" Verificación completada - Los tableros tienen el formato correcto")
     print("=" * 60)
 
 
