@@ -145,5 +145,6 @@ data/othello_championship
 # Quarto documentation 
 /.quarto/
 **/*.quarto_ipynb
-
+/.quarto/
+**/*.quarto_ipynb
 
