@@ -9,7 +9,7 @@ import sys
 from tqdm import tqdm
 
 # Añadir el directorio raíz al path
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from sae.bsp_identifier import identificador
@@ -20,7 +20,7 @@ def boards_to_bsp_ground_truth(boards_filepath: str, output_filepath: str = None
     Convierte tableros en ground truth de BSPs.
     
     Args:
-        boards_filepath: Ruta a board_states_*.npy con shape (n_games, n_moves, 8, 8)
+        boards_filepath: Ruta a board_states_*.npz con 'boards' y 'colors'
         output_filepath: Ruta donde guardar bsp_ground_truth_*.npy (opcional)
         
     Returns:
@@ -36,13 +36,16 @@ def boards_to_bsp_ground_truth(boards_filepath: str, output_filepath: str = None
     print("=" * 60)
     print()
     
-    # Cargar tableros
-    print(f"Cargando tableros desde: {boards_path}")
-    boards = np.load(boards_path)
+    # Cargar tableros y colores desde archivo .npz
+    print(f"Cargando tableros y colores desde: {boards_path}")
+    data = np.load(boards_path)
+    boards = data['boards']
+    colors = data['colors']
     n_games, n_moves, board_h, board_w = boards.shape
     n_positions = n_games * n_moves
     
     print(f"✓ Shape de tableros: {boards.shape}")
+    print(f"✓ Shape de colores: {colors.shape}")
     print(f"✓ Total de posiciones: {n_positions:,}")
     print()
     
@@ -66,8 +69,8 @@ def boards_to_bsp_ground_truth(boards_filepath: str, output_filepath: str = None
         for move_idx in range(n_moves):
             tablero = boards[game_idx, move_idx]
             
-            # Alternar color_jugador: Negro (1) juega primero, luego Blanco (-1)
-            color_jugador = 1 if move_idx % 2 == 0 else -1
+            # Usar el color REAL capturado del motor de juego (maneja forfeits correctamente)
+            color_jugador = colors[game_idx, move_idx]
             
             # Generar BSPs
             bsps_dict = identificador(tablero, color_jugador)
@@ -116,8 +119,8 @@ def main():
     """Script principal para generar ground truth de BSPs."""
     
     # Rutas por defecto
-    project_root = Path(__file__).parent.parent.parent
-    boards_file = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npy"
+    project_root = Path(__file__).parent.parent.parent.parent
+    boards_file = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npz"
     output_file = project_root / "sae" / "metrics" / "02_data" / "bsp_ground_truth_200games.npy"
     
     print()

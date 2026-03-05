@@ -136,9 +136,39 @@ Donde:
 - `b`: tablero real (ground truth)
 - `F1(·)`: F1-score calculado **solo sobre casillas con piezas**
 
-**Nota sobre thresholds:** Los thresholds `t` para cada feature se determinan 
-en el training set (junto con la identificación de precision ≥ 0.95) y se aplican 
-directamente en el test set. NO se re-optimizan en test.
+### Fórmula de Reconstruction (Ecuación 5 del paper)
+```
+Rec({xi}, Dtest) = (1/|Dtest|) × Σ_{x∈Dtest} max_t F1(P({fi(x)}); b)
+```
+
+**Interpretación del max_t (barrido global de thresholds):**
+
+Para cada tablero en el test set:
+1. Se prueban TODOS los thresholds `t ∈ {0, 0.1, 0.2, ..., 1.0}`
+2. Para cada threshold global t:
+   - Se aplica el MISMO t a TODAS las features
+   - Se reconstruye el tablero usando features identificadas como "alta precisión" en train
+   - Se calcula F1(tablero_reconstruido, tablero_real)
+3. Se toma el threshold que maximiza F1 para ese tablero
+4. Se promedia el "mejor F1" sobre todos los tableros en Dtest
+
+**Diferencia clave con Coverage:**
+- **Coverage**: Cada feature puede tener su propio threshold óptimo
+- **Reconstruction**: Un único threshold GLOBAL se aplica a todas las features simultáneamente
+
+**Proceso en detalle:**
+
+**Fase 1 - Training set (Dtrain):**
+- Identificar qué features tienen precisión ≥ 0.95 para cada BSP
+- NO se guardan thresholds específicos por feature
+- Solo se guarda: "feature X es útil para BSP Y"
+
+**Fase 2 - Test set (Dtest):**
+- Para threshold global t=0.0: reconstruir todos los tableros → F1_avg(t=0.0)
+- Para threshold global t=0.1: reconstruir todos los tableros → F1_avg(t=0.1)
+- ...
+- Para threshold global t=1.0: reconstruir todos los tableros → F1_avg(t=1.0)
+- **Reportar:** max(F1_avg) entre todos los thresholds
 
 ### IMPORTANTE: NO puntuar casillas vacías
 
@@ -311,75 +341,115 @@ def calculate_coverage(sae_features, ground_truth_bsps, dataset):
 def calculate_reconstruction(sae_features, ground_truth_bsps, train_set, test_set):
     """
     Args:
-        sae_features: features del SAE
-        ground_truth_bsps: 128 BSPs de piezas
+        sae_features: features del SAE con sus activaciones
+        ground_truth_bsps: 128 BSPs de piezas (sin vacías)
         train_set: 1000 partidas para identificar features de alta precisión
         test_set: 1000 partidas para evaluar
     
     Returns:
-        reconstruction_score: float entre 0 y 1
+        reconstruction_score: float entre 0 y 1 (el mejor F1 entre todos los thresholds)
     """
-    # PASO 1: Identificar features de alta precisión en train_set
-    high_precision_features = {}  # bsp_id -> [list of (feature_id, threshold)]
+    
+    # ========================================================================
+    # FASE 1 (TRAIN): Identificar features de alta precisión
+    # ========================================================================
+    # Guardamos solo QUÉ features son útiles, NO sus thresholds específicos
+    
+    high_precision_features = {}  # bsp_id -> [list of feature_ids]
     
     for bsp_id in ground_truth_bsps:
         high_precision_features[bsp_id] = []
         
-        for feature_id, feature_activations in sae_features.items():
-            f_max = np.max(feature_activations)
+        for feature_id, feature_activations_train in sae_features.items():
+            f_max = np.max(feature_activations_train)
             
-            for t in [0, 0.1, ..., 0.9]:
-                predictions = (feature_activations > t * f_max).astype(int)
-                
-                # Calcular precisión
+            # Buscar si existe ALGÚN threshold con precisión ≥ 0.95
+            found_good_threshold = False
+            
+            for t in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
+                predictions = (feature_activations_train > t * f_max).astype(int)
                 precision = precision_score(ground_truth_bsps[bsp_id], predictions)
                 
-                # Si precisión ≥ 0.95, guardar
                 if precision >= 0.95:
-                    high_precision_features[bsp_id].append((feature_id, t))
+                    high_precision_features[bsp_id].append(feature_id)
+                    found_good_threshold = True
+                    break  # Esta feature es útil, pasar a la siguiente
     
-    # PASO 2: Reconstruir tableros en test_set
-    reconstruction_f1_scores = []
+    # ========================================================================
+    # FASE 2 (TEST): Barrido global de thresholds
+    # ========================================================================
+    # Probar CADA threshold global y quedarse con el mejor
     
-    for board in test_set:
-        # Predecir BSPs usando regla de reconstrucción
-        predicted_bsps = {}
+    all_thresholds = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    f1_per_threshold = []
+    
+    for t_global in all_thresholds:
+        # Para este threshold, reconstruir TODOS los tableros del test set
+        f1_scores_this_threshold = []
         
-        for bsp_id in ground_truth_bsps:
-            # Verificar si alguna feature de alta precisión se activa
-            activated = False
+        for board_idx in test_set:
+            # Predicción del tablero completo con threshold global t_global
+            predicted_bsps = {}
             
-            for (feature_id, threshold) in high_precision_features[bsp_id]:
-                feature_value = sae_features[feature_id][board]
-                f_max = np.max(sae_features[feature_id])
+            for bsp_id in ground_truth_bsps:
+                # Verificar si ALGUNA feature de alta precisión se activa
+                activated = False
                 
-                if feature_value > threshold * f_max:
-                    activated = True
-                    break
+                for feature_id in high_precision_features[bsp_id]:
+                    feature_value = sae_features[feature_id][board_idx]
+                    f_max = np.max(sae_features[feature_id])
+                    
+                    # CRÍTICO: Aplicar el threshold GLOBAL a esta feature
+                    if feature_value > t_global * f_max:
+                        activated = True
+                        break  # Ya encontramos una feature activa para esta BSP
+                
+                # Regla de reconstrucción (Ecuación 4):
+                # Si alguna feature de alta precisión se activa → predecir 1
+                predicted_bsps[bsp_id] = 1 if activated else 0
             
-            predicted_bsps[bsp_id] = 1 if activated else 0
+            # Calcular F1 SOLO sobre casillas con piezas (NO puntuar vacías)
+            actual_pieces = []
+            predicted_pieces = []
+            
+            for bsp_id in ground_truth_bsps:
+                gt_value = ground_truth_bsps[bsp_id][board_idx]
+                pred_value = predicted_bsps[bsp_id]
+                
+                # Solo incluir en F1 si:
+                # 1. Hay pieza real (gt=1), o
+                # 2. Predijimos pieza (pred=1) → falso positivo
+                if gt_value == 1:  # Hay pieza real
+                    actual_pieces.append(1)
+                    predicted_pieces.append(pred_value)
+                elif pred_value == 1:  # Falso positivo (predijo pieza en vacía)
+                    actual_pieces.append(0)
+                    predicted_pieces.append(1)
+                # Si ambos son 0 (vacía correctamente predicha) → NO puntúa
+            
+            # F1 para este tablero con este threshold
+            if len(actual_pieces) > 0:
+                f1 = f1_score(actual_pieces, predicted_pieces)
+            else:
+                f1 = 1.0  # Tablero vacío correctamente predicho
+            
+            f1_scores_this_threshold.append(f1)
         
-        # Calcular F1 SOLO sobre casillas con piezas
-        actual_pieces = []
-        predicted_pieces = []
-        
-        for bsp_id in ground_truth_bsps:
-            if ground_truth_bsps[bsp_id][board] == 1:  # Si hay pieza real
-                actual_pieces.append(1)
-                predicted_pieces.append(predicted_bsps[bsp_id])
-            elif predicted_bsps[bsp_id] == 1:  # Falso positivo (predijo pieza en vacía)
-                actual_pieces.append(0)
-                predicted_pieces.append(1)
-            # Si ambos son 0 (vacía) → NO puntúa
-        
-        # F1 para este tablero
-        f1 = f1_score(actual_pieces, predicted_pieces)
-        reconstruction_f1_scores.append(f1)
+        # F1 promedio para este threshold sobre todo el test set
+        avg_f1_this_threshold = np.mean(f1_scores_this_threshold)
+        f1_per_threshold.append(avg_f1_this_threshold)
     
-    # Promediar F1 sobre test set
-    reconstruction = np.mean(reconstruction_f1_scores)
+    # ========================================================================
+    # FASE 3: Reportar el MEJOR threshold (Ecuación 5: max_t)
+    # ========================================================================
+    reconstruction_score = np.max(f1_per_threshold)
+    best_threshold_idx = np.argmax(f1_per_threshold)
+    best_threshold = all_thresholds[best_threshold_idx]
     
-    return reconstruction
+    print(f"Mejor threshold global: t={best_threshold:.1f}")
+    print(f"Reconstruction Score: {reconstruction_score:.4f}")
+    
+    return reconstruction_score
 ```
 
 ---
@@ -395,13 +465,15 @@ def calculate_reconstruction(sae_features, ground_truth_bsps, train_set, test_se
 - [ ] Promediar F1 scores
 - [ ] **Objetivo: ~0.52 para Othello**
 
+
 ### Para Reconstruction:
 
 - [ ] Dividir dataset (1000 train, 1000 test)
-- [ ] En train: identificar features con precisión ≥ 0.95
-- [ ] En test: aplicar regla de reconstrucción
-- [ ] Calcular F1 SOLO sobre casillas con piezas
-- [ ] Promediar F1 sobre test set
+- [ ] **Fase 1 (Train):** Identificar features con precisión ≥ 0.95 para cada BSP
+- [ ] **Fase 2 (Test):** Para CADA threshold global t ∈ [0.0, 0.1, ..., 1.0]:
+  - [ ] Reconstruir todos los tableros usando ese t
+  - [ ] Calcular F1 promedio (solo sobre casillas con piezas)
+- [ ] **Fase 3:** Reportar el mejor F1 entre todos los thresholds (max_t)
 - [ ] **Objetivo: ~0.95 para Othello**
 
 ---
