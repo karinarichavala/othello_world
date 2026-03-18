@@ -80,8 +80,8 @@ def reconstruct_board_states_from_games(games_filepath: str, output_filepath: st
         all_board_states = [game[:min_len] for game in all_board_states]
         all_hand_colors = [colors[:min_len] for colors in all_hand_colors]
     
-    board_states = np.array(all_board_states)  # Shape: (n_games, n_moves, 8, 8)
-    hand_colors = np.array(all_hand_colors, dtype=np.int8)  # Shape: (n_games, n_moves)
+    board_states = np.array(all_board_states)[:, :59, :, :]  # Shape: (n_games, n_moves, 8, 8)
+    hand_colors = np.array(all_hand_colors, dtype=np.int8)[:, :59]  # Shape: (n_games, n_moves)
     
     print(f"Forma del array de estados: {board_states.shape}")
     print(f"Forma del array de colores: {hand_colors.shape}")
@@ -107,8 +107,8 @@ def main():
     
     # Rutas por defecto
     project_root = Path(__file__).parent.parent.parent.parent
-    games_file = project_root / "sae" / "activations" / "data" / "games_200.txt"
-    output_file = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npz"
+    games_file = project_root / "sae" / "activations" / "data" / "games_1.txt"
+    output_file = project_root / "sae" / "metrics" / "02_data" / "board_states_1games.npz"
     
     print("=" * 60)
     print("Generación de Estados de Tablero desde Partidas Sintéticas")

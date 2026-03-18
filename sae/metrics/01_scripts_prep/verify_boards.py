@@ -35,9 +35,10 @@ def main():
     print("=" * 60)
     
     # Cargar tableros reconstruidos
-    boards_path = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npy"
-    boards = np.load(boards_path)
-    
+    boards_path = project_root / "metrics" / "02_data" / "board_states_1games.npz"
+    data = np.load(boards_path)
+    boards = data['boards']
+
     print(f"\n Información del array:")
     print(f"   Shape: {boards.shape}")
     print(f"   Dtype: {boards.dtype}")
@@ -82,10 +83,11 @@ def main():
     print(f"   ✓ BSPs activos (=1): {np.sum(bsps_blanco == 1)}")
     
     # Verificar algunas partidas más
-    print(f"\n Verificación estadística (primeras 10 partidas):")
+    n_games = boards.shape[0]
+    print(f"\n Verificación estadística (primeras {min(10, n_games)} partidas):")
     print("=" * 60)
-    
-    for game_idx in range(10):
+
+    for game_idx in range(min(10, n_games)):
         # Último movimiento de cada partida
         final_board = boards[game_idx, -1]
         
