@@ -66,9 +66,16 @@ def identificador(tablero, color_jugador):
             
             # Estado 2: ficha del oponente
             bsps[f'BSP{casilla}2'] = (valor == -color_jugador)
+
+    # 2. BSPs absolutas (128 BSPs)
+    for i in range(8):
+        for j in range(8):
+            casilla = filas[i] + columnas[j]
+            valor = tablero[i, j]
+            bsps[f'BSP{casilla}B'] = (valor == 1)
+            bsps[f'BSP{casilla}W'] = (valor == -1)
     
-    # 2. BSPs especiales (6 BSPs)
-    
+    # 3. BSPs especiales (6 BSPs)
     # Contar fichas
     total_fichas = np.sum(tablero != 0)
     fichas_mias = np.sum(tablero == color_jugador)
@@ -98,7 +105,7 @@ def identificador(tablero, color_jugador):
     
     # BSP_EN_CURSO: juego no terminado
     bsps['BSP_EN_CURSO'] = not bsps['BSP_TERMINADA']
-    
+
     return bsps
 
 
@@ -138,14 +145,14 @@ def imprimir_resumen(bsps):
     mias = sum(1 for k, v in bsps.items() if v and k.endswith('1') and k.startswith('BSP') and len(k) == 6)
     oponente = sum(1 for k, v in bsps.items() if v and k.endswith('2') and k.startswith('BSP') and len(k) == 6)
     
-    print(f"\n📊 Resumen de BSPs activas:")
+    print(f"\n Resumen de BSPs activas:")
     print(f"   Casillas vacías: {vacias}")
     print(f"   Fichas mías: {mias}")
     print(f"   Fichas oponente: {oponente}")
     print(f"   Total casillas: {vacias + mias + oponente} (debe ser 64)")
     
     # Estados especiales
-    print(f"\n🎮 Estados especiales:")
+    print(f"\n Estados especiales:")
     estados = ['BSP_INICIAL', 'BSP_TERMINADA', 'BSP_GANE', 'BSP_PERDI', 'BSP_EMPATE', 'BSP_EN_CURSO']
     for estado in estados:
         if bsps.get(estado, False):
@@ -160,7 +167,7 @@ def imprimir_bsps_activas_con_fichas(bsps):
     Args:
         bsps (dict[str, bool]): Diccionario de BSPs
     """
-    print("\n🎯 BSPs activas con fichas (sin vacías):")
+    print("\n BSPs activas con fichas (sin vacías):")
     
     mias = []
     oponente = []
@@ -188,7 +195,7 @@ def imprimir_todas_bsps_activas(bsps):
     Args:
         bsps (dict[str, bool]): Diccionario de BSPs
     """
-    print("\n📋 TODAS las BSPs activas:")
+    print("\n TODAS las BSPs activas:")
     
     vacias = []
     mias = []
@@ -253,7 +260,7 @@ def verificar_consistencia(bsps):
             activas = sum([vacia, mia, oponente])
             assert activas == 1, f"Casilla {casilla} tiene {activas} BSPs activas (debe ser 1)"
     
-    print("✅ Consistencia verificada: Todas las casillas tienen exactamente 1 BSP activa")
+    print(" Consistencia verificada: Todas las casillas tienen exactamente 1 BSP activa")
     return True
 
 

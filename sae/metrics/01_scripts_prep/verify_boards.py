@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 # Añadir el directorio raíz al path
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from data.othello import OthelloBoardState
@@ -35,7 +35,7 @@ def main():
     print("=" * 60)
     
     # Cargar tableros reconstruidos
-    boards_path = project_root / "metrics" / "02_data" / "board_states_1games.npz"
+    boards_path = project_root / "sae" / "metrics" / "02_data" / "board_states_1games.npz"
     data = np.load(boards_path)
     boards = data['boards']
 
