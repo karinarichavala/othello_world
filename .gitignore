@@ -148,3 +148,9 @@ data/othello_championship
 /.quarto/
 **/*.quarto_ipynb
 
+# Activaciones
+sae/activations/data/*.npy
+
+# Modelos locales guardados
+sae/models/**/*.pt
+
