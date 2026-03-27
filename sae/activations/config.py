@@ -7,7 +7,7 @@ class ExtractionConfig:
     """Configuración para extracción de activaciones"""
     
     # === GENERACIÓN DE PARTIDAS ===
-    num_games = 1               # Número de partidas sintéticas a generar
+    num_games = 1000              # Número de partidas sintéticas a generar
     memory_threshold = 1000        # Umbral para usar archivo (no modificar)
     
     # === EXTRACCIÓN DE ACTIVACIONES ===
@@ -26,7 +26,7 @@ class ExtractionConfig:
     
     def get_activations_filename(self):
         """Genera el nombre del archivo de activaciones basado en la configuración"""
-        return f"layer{self.target_layer}_{self.num_games}games.npy"
+        return f"layer{self.target_layer + 1}_{self.num_games}games.npy"
     
     def get_activations_path(self):
         """Retorna la ruta completa para guardar las activaciones"""

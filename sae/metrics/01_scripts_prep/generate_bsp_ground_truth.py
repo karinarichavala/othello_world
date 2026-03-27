@@ -12,7 +12,7 @@ from tqdm import tqdm
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from sae.bsp_identifier import identificador
+from sae.tools.bsp_identifier import identificador
 
 
 def boards_to_bsp_ground_truth(boards_filepath: str, output_filepath: str = None):
@@ -120,8 +120,8 @@ def main():
     
     # Rutas por defecto
     project_root = Path(__file__).parent.parent.parent.parent
-    boards_file = project_root / "sae" / "metrics" / "02_data" / "board_states_1games.npz"
-    output_file = project_root / "sae" / "metrics" / "02_data" / "bsp_ground_truth_1games.npy"
+    boards_file = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npz"
+    output_file = project_root / "sae" / "metrics" / "02_data" / "bsp_ground_truth_200games.npy"
     
     print()
     print("=" * 60)
@@ -148,7 +148,7 @@ def main():
     print("=" * 60)
     print()
     print("Siguiente paso:")
-    print("  1. Cargar activaciones SAE: layer5_1games.npy")
+    print("  1. Cargar activaciones SAE: layer5_200games.npy")
     print("  2. Cargar modelo SAE: sae/model/saved_model/sae_othello_best.pt")
     print("  3. Calcular Coverage y Reconstruction metrics")
 

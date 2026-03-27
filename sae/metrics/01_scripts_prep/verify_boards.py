@@ -11,7 +11,7 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from data.othello import OthelloBoardState
-from sae.bsp_identifier import identificador
+from sae.tools.bsp_identifier import identificador
 
 
 def visualize_board(board):
@@ -35,7 +35,7 @@ def main():
     print("=" * 60)
     
     # Cargar tableros reconstruidos
-    boards_path = project_root / "sae" / "metrics" / "02_data" / "board_states_1games.npz"
+    boards_path = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npz"
     data = np.load(boards_path)
     boards = data['boards']
 

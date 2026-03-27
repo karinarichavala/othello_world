@@ -16,7 +16,7 @@ def validate_colors():
     """Valida que los colores capturados sean diferentes al método move_idx % 2."""
     
     # Cargar datos
-    data_path = project_root / "sae" / "metrics" / "02_data" / "board_states_1games.npz"
+    data_path = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npz"
     
     print("=" * 60)
     print("Validación de Captura de Colores")
