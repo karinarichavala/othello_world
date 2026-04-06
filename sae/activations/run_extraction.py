@@ -106,8 +106,8 @@ def extract_from_file(config, model):
     
     # Crear extractor y procesar por lotes
     extractor = ActivationExtractor(model, config.target_layer, config.device)
-    batch_processor.extractor = extractor
-    
+    batch_processor = BatchProcessor(extractor)
+
     print(f"\n Extrayendo activaciones del Bloque {config.target_layer + 1}...")
     activations = batch_processor.process_in_batches(tokenized_games)
     
