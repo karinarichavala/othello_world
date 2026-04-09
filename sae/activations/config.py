@@ -7,7 +7,7 @@ class ExtractionConfig:
     """Configuración para extracción de activaciones"""
     
     # === GENERACIÓN DE PARTIDAS ===
-    num_games = 2000            # Número de partidas sintéticas a generar
+    num_games = 5000           # Número de partidas sintéticas a generar
     memory_threshold = 1000        # Umbral para usar archivo (no modificar)
     
     # === EXTRACCIÓN DE ACTIVACIONES ===

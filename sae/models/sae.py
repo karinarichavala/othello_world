@@ -90,6 +90,15 @@ class SparseAutoencoder(nn.Module):
             return F.linear(hidden, self.encoder.weight.t(), self.decoder_bias)
         else:
             return self.decoder(hidden)
+    def normalize_decoder(self):          
+        """
+        Normaliza columnas del decoder a norma unitaria.
+        Llamar después de cada optimizer.step() durante entrenamiento.
+        """
+        if not self.tied_weights:
+            with torch.no_grad():
+                norms = self.decoder.weight.data.norm(dim=0, keepdim=True)
+                self.decoder.weight.data.div_(norms.clamp(min=1e-8))
     
     def forward(self, x):
         """
