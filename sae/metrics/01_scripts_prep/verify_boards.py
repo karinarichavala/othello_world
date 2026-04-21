@@ -35,7 +35,7 @@ def main():
     print("=" * 60)
     
     # Cargar tableros reconstruidos
-    boards_path = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npz"
+    boards_path = project_root / "sae" / "metrics" / "02_data" / "board_states_1games.npz"
     data = np.load(boards_path)
     boards = data['boards']
 
