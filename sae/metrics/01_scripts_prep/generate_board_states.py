@@ -107,8 +107,8 @@ def main():
     
     # Rutas por defecto
     project_root = Path(__file__).parent.parent.parent.parent
-    games_file = project_root / "sae" / "activations" / "data" / "games_1.txt"
-    output_file = project_root / "sae" / "metrics" / "02_data" / "board_states_1games.npz"
+    games_file = project_root / "sae" / "activations" / "data" / "games_200.txt"
+    output_file = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npz"
     
     print("=" * 60)
     print("Generación de Estados de Tablero desde Partidas Sintéticas")

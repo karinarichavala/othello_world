@@ -120,8 +120,8 @@ def main():
     
     # Rutas por defecto
     project_root = Path(__file__).parent.parent.parent.parent
-    boards_file = project_root / "sae" / "metrics" / "02_data" / "board_states_1games.npz"
-    output_file = project_root / "sae" / "metrics" / "02_data" / "bsp_ground_truth_1games.npy"
+    boards_file = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npz"
+    output_file = project_root / "sae" / "metrics" / "02_data" / "bsp_ground_truth_200games.npy"
     
     print()
     print("=" * 60)

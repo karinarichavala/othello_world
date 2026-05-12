@@ -1,0 +1,16 @@
+{
+  "val_mse_final": 0.32454843089935625,
+  "val_mse_best": 0.3243094505147731,
+  "val_l0_final": 82.24448703197723,
+  "val_fraction_active_final": 0.005019805116697829,
+  "best_epoch": 238,
+  "total_epochs": 250,
+  "train_mse_final": 0.32386144109674403,
+  "train_l0_final": 73.47222694190773,
+  "hidden_dim": 16384,
+  "expansion_factor": 32.0,
+  "sparsity_coef": 0.01,
+  "sparsity_decay": 0.98,
+  "learning_rate": 0.0003,
+  "num_games": 1000
+}

@@ -4,7 +4,10 @@
       "Bash(python -c ':*)",
       "Bash(python -c ' *)",
       "Bash(python -c \"import sys; data=sys.stdin.buffer.read\\(\\); print\\(data.decode\\('utf-8','replace'\\)\\)\")",
-      "Bash(python -u -c ' *)"
+      "Bash(python -u -c ' *)",
+      "Bash(python -c \"import pdfplumber; print\\('ok'\\)\")",
+      "Bash(python -c \"import fitz; print\\('ok'\\)\")",
+      "Bash(python -c \"import pdfminer; print\\('ok'\\)\")"
     ]
   }
 }
