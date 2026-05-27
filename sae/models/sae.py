@@ -43,26 +43,24 @@ class SparseAutoencoder(nn.Module):
         self.hidden_dim = hidden_dim
         self.tied_weights = tied_weights
         
+        # Pre-encoder bias compartido (usado también como bias del decoder)
+        self.b_pre = nn.Parameter(torch.zeros(input_dim))
+
         # Encoder: input_dim -> hidden_dim
         self.encoder = nn.Linear(input_dim, hidden_dim, bias=True)
-        
-        # Decoder: hidden_dim -> input_dim
-        if tied_weights:
-            self.decoder_bias = nn.Parameter(torch.zeros(input_dim))
-        else:
-            self.decoder = nn.Linear(hidden_dim, input_dim, bias=True)
-        
-        # Inicialización Xavier para estabilidad
+
+        # Decoder: hidden_dim -> input_dim (sin bias propio, usa b_pre)
+        if not tied_weights:
+            self.decoder = nn.Linear(hidden_dim, input_dim, bias=False)
+
         self._init_weights()
-    
+
     def _init_weights(self):
-        """Inicialización de pesos (Xavier/Glorot)"""
-        nn.init.xavier_uniform_(self.encoder.weight)
-        nn.init.zeros_(self.encoder.bias)
-        
+        w = torch.randn(self.input_dim, self.hidden_dim)
+        w = w / w.norm(dim=0, keepdim=True) * 0.1
+        self.encoder.weight = nn.Parameter(w.clone().T)
         if not self.tied_weights:
-            nn.init.xavier_uniform_(self.decoder.weight)
-            nn.init.zeros_(self.decoder.bias)
+            self.decoder.weight = nn.Parameter(w.clone())
     
     def encode(self, x):
         """
@@ -74,7 +72,7 @@ class SparseAutoencoder(nn.Module):
         Returns:
             hidden: Activaciones dispersas (batch_size, hidden_dim)
         """
-        return F.relu(self.encoder(x))
+        return F.relu(self.encoder(x - self.b_pre))
     
     def decode(self, hidden):
         """
@@ -87,9 +85,9 @@ class SparseAutoencoder(nn.Module):
             reconstruction: Activaciones reconstruidas (batch_size, input_dim)
         """
         if self.tied_weights:
-            return F.linear(hidden, self.encoder.weight.t(), self.decoder_bias)
+            return F.linear(hidden, self.encoder.weight.t(), self.b_pre)
         else:
-            return self.decoder(hidden)
+            return self.decoder(hidden) + self.b_pre
 
     
     def forward(self, x):

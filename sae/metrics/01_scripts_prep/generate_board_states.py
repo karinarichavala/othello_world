@@ -73,15 +73,21 @@ def reconstruct_board_states_from_games(games_filepath: str, output_filepath: st
     min_len, max_len = min(game_lengths), max(game_lengths)
     print(f"Longitudes de partidas: min={min_len}, max={max_len}")
     
+    # Filtrar partidas con menos de 59 movimientos
+    min_moves = 59
+    valid_games = [(boards, colors) for boards, colors in zip(all_board_states, all_hand_colors)
+                   if len(boards) >= min_moves]
+
+    if len(valid_games) < len(all_board_states):
+        print(f"Descartadas {len(all_board_states) - len(valid_games)} partidas con menos de {min_moves} movimientos")
+        print(f"✓ Partidas válidas: {len(valid_games)}")
+
+    all_board_states = [game[:min_moves] for game, _ in valid_games]
+    all_hand_colors  = [colors[:min_moves] for _, colors in valid_games]
+
     # Convertir a array numpy
-    # Si hay diferentes longitudes, rellenar con ceros o truncar a la longitud mínima
-    if min_len != max_len:
-        print(f"  Las partidas tienen diferentes longitudes, usando longitud mínima: {min_len}")
-        all_board_states = [game[:min_len] for game in all_board_states]
-        all_hand_colors = [colors[:min_len] for colors in all_hand_colors]
-    
-    board_states = np.array(all_board_states)[:, :59, :, :]  # Shape: (n_games, n_moves, 8, 8)
-    hand_colors = np.array(all_hand_colors, dtype=np.int8)[:, :59]  # Shape: (n_games, n_moves)
+    board_states = np.array(all_board_states)   # Shape: (n_games, 59, 8, 8)
+    hand_colors = np.array(all_hand_colors, dtype=np.int8)  # Shape: (n_games, 59)
     
     print(f"Forma del array de estados: {board_states.shape}")
     print(f"Forma del array de colores: {hand_colors.shape}")
@@ -107,8 +113,8 @@ def main():
     
     # Rutas por defecto
     project_root = Path(__file__).parent.parent.parent.parent
-    games_file = project_root / "sae" / "activations" / "data" / "games_200.txt"
-    output_file = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npz"
+    games_file = project_root / "sae" / "activations" / "data" / "games_2000.txt"
+    output_file = project_root / "sae" / "metrics" / "02_data" / "board_states_2000games.npz"
     
     print("=" * 60)
     print("Generación de Estados de Tablero desde Partidas Sintéticas")

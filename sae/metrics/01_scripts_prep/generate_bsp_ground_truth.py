@@ -120,8 +120,8 @@ def main():
     
     # Rutas por defecto
     project_root = Path(__file__).parent.parent.parent.parent
-    boards_file = project_root / "sae" / "metrics" / "02_data" / "board_states_200games.npz"
-    output_file = project_root / "sae" / "metrics" / "02_data" / "bsp_ground_truth_200games.npy"
+    boards_file = project_root / "sae" / "metrics" / "02_data" / "board_states_2000games.npz"
+    output_file = project_root / "sae" / "metrics" / "02_data" / "bsp_ground_truth_2000games.npy"
     
     print()
     print("=" * 60)
@@ -148,7 +148,7 @@ def main():
     print("=" * 60)
     print()
     print("Siguiente paso:")
-    print("  1. Cargar activaciones SAE: layer5_200games.npy")
+    print("  1. Cargar activaciones SAE: layer6_2000games.npy")
     print("  2. Cargar modelo SAE: sae/model/saved_model/sae_othello_best.pt")
     print("  3. Calcular Coverage y Reconstruction metrics")
 

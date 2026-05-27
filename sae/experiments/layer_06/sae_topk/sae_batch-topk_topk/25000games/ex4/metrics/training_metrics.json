@@ -1,0 +1,16 @@
+{
+  "val_mse_final": 0.1622484182507109,
+  "val_mse_best": 0.16177074817431428,
+  "val_l0_final": 50.0,
+  "val_fraction_active_final": 0.006103515625,
+  "best_epoch": 29,
+  "total_epochs": 49,
+  "train_mse_final": 0.15420708411792414,
+  "train_l0_final": 50.0,
+  "architecture": "batchtopk",
+  "k": 50,
+  "d_sae": 8192,
+  "d_in": 512,
+  "expansion_factor": 16,
+  "hook_name": "blocks.5.hook_resid_post"
+}

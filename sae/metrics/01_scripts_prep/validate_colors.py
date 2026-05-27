@@ -81,7 +81,7 @@ def validate_colors():
     else:
         print(" ADVERTENCIA: No se encontraron diferencias con el método antiguo.")
         print("  Esto podría indicar que:")
-        print("  1. No hay forfeits en las 200 partidas (muy improbable)")
+        print("  1. No hay forfeits en las 1000 partidas (muy improbable)")
         print("  2. La captura no está funcionando correctamente")
     
     print()

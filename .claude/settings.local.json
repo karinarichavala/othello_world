@@ -7,7 +7,12 @@
       "Bash(python -u -c ' *)",
       "Bash(python -c \"import pdfplumber; print\\('ok'\\)\")",
       "Bash(python -c \"import fitz; print\\('ok'\\)\")",
-      "Bash(python -c \"import pdfminer; print\\('ok'\\)\")"
+      "Bash(python -c \"import pdfminer; print\\('ok'\\)\")",
+      "Bash(python -c \"import numpy as np; d = np.load\\(r'c:\\\\Users\\\\Esposa\\\\Documents\\\\Repos\\\\othello_world\\\\sae\\\\experiments\\\\layer_06\\\\sae_topk\\\\sae_batch-topk_topk\\\\100000games\\\\ex1\\\\metrics\\\\reconstruction_results.npz'\\); print\\(list\\(d.keys\\(\\)\\)\\); [print\\(k, d[k].shape, d[k].dtype\\) for k in d.keys\\(\\)]\")",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\Esposa\\\\Documents\\\\Repos\\\\othello_world\" -Recurse -Directory | Where-Object {$_.Name -eq \"SAE_BoardGameEval-master\" -or $_.Name -eq \"dictionary_learning\"} | Select-Object FullName)",
+      "Bash(python -c \"import pypdf; print\\('pypdf ok'\\)\")",
+      "Bash(python -c \"import pdfplumber; print\\('pdfplumber ok'\\)\")",
+      "Bash(python -c \"import fitz; print\\('pymupdf ok'\\)\")"
     ]
   }
 }
