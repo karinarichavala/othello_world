@@ -1,0 +1,19 @@
+{
+  "val_mse_final": 48.93673216721107,
+  "val_mse_best": Infinity,
+  "val_l0_final": 178.38696794181035,
+  "val_fraction_active_final": 0.021775752922584272,
+  "best_epoch": 0,
+  "total_epochs": 200,
+  "train_mse_final": 46.5507294441633,
+  "train_l0_final": 179.3892748748409,
+  "hidden_dim": 8192,
+  "expansion_factor": 16.0,
+  "sparsity_coef": 0.5,
+  "p_start": 1.0,
+  "p_end": 0.2,
+  "n_sparsity_updates": 10,
+  "anneal_start": 10000,
+  "learning_rate": 0.001,
+  "num_games": 25000
+}

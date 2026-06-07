@@ -1,0 +1,24 @@
+{
+  "val_total_loss_final": 0.39520090415671066,
+  "val_total_loss_best": 0.39266616106033325,
+  "val_mse_w2048_final": 0.22692378670782656,
+  "val_mse_w4096_final": 0.20609375552551165,
+  "val_mse_w8192_final": 0.19291510855829394,
+  "val_l0_final": 78.47855109137458,
+  "val_fraction_active_final": 0.009579901256271312,
+  "best_epoch": 131,
+  "total_epochs": 151,
+  "train_total_loss_final": 0.38597079515457156,
+  "train_l0_final": 81.0,
+  "architecture": "matryoshkabatchtopk",
+  "k": 81,
+  "matryoshka_widths": [
+    2048,
+    4096,
+    8192
+  ],
+  "d_sae": 8192,
+  "d_in": 512,
+  "expansion_factor": 16,
+  "hook_name": "blocks.5.hook_resid_post"
+}
