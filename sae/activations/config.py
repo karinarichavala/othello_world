@@ -7,11 +7,11 @@ class ExtractionConfig:
     """Configuración para extracción de activaciones"""
     
     # === GENERACIÓN DE PARTIDAS ===
-    num_games = 2000           # Número de partidas sintéticas a generar
+    num_games = 100           # Número de partidas sintéticas a generar
     memory_threshold = 1000        # Umbral para usar archivo (no modificar)
     
     # === EXTRACCIÓN DE ACTIVACIONES ===
-    target_layer = 5               # Bloque 6 (índice 5 en Python, 0-7)
+    target_layer = 2               # Bloque 6 (índice 5 en Python, 0-7)
     checkpoint_path = "ckpts/gpt_championship.ckpt"  # Checkpoint del GPT
     batch_size_games = 100         # Partidas por lote (si > 1000 games)
     

@@ -69,7 +69,7 @@ def extract_from_memory(config, model):
     save_games_to_file(othello_data.sequences, games_filepath)
     
     # Tokenizar secuencias
-    print(f"🔤 Tokenizando secuencias...")
+    print(f" Tokenizando secuencias...")
     tokenizer = OthelloTokenizer(othello_data)
     tokenized_sequences = tokenizer.tokenize_all()
     print(f"✓ {len(tokenized_sequences)} secuencias tokenizadas")
@@ -87,10 +87,10 @@ def extract_from_file(config, model):
     Ruta segura: Generar → Buscar archivo → Procesar por lotes
     Para num_games > 1000
     """
-    print("\n💾 MODO SEGURO: Usando archivo + procesamiento por lotes")
+    print("\n MODO SEGURO: Usando archivo + procesamiento por lotes")
     
     # Generar partidas
-    print(f"🎮 Generando {config.num_games} partidas sintéticas...")
+    print(f" Generando {config.num_games} partidas sintéticas...")
     othello_data = Othello(ood_num=config.num_games)
     print(f"✓ {len(othello_data.sequences)} partidas generadas")
     
@@ -99,7 +99,7 @@ def extract_from_file(config, model):
     save_games_to_file(othello_data.sequences, games_filepath)
     
     # Tokenizar secuencias
-    print(f"\n🔤 Tokenizando {len(othello_data.sequences)} secuencias...")
+    print(f"\n Tokenizando {len(othello_data.sequences)} secuencias...")
     tokenizer = OthelloTokenizer(othello_data)
     tokenized_games = tokenizer.tokenize_all()
     print(f"✓ {len(tokenized_games)} secuencias tokenizadas")
