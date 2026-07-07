@@ -1,10 +1,12 @@
 # Guía de Instalación - Othello World
 
-Esta guía proporciona instrucciones paso a paso para instalar y configurar el proyecto **Othello World** después del refactoring.
+Esta guía proporciona instrucciones paso a paso para instalar y configurar el proyecto **Othello World**.
+
+**Alcance**: Esta guía cubre la instalación del proyecto y el uso de los módulos agregados en esta tesis (`gui/` y `sae/`), a partir del checkpoint ya entrenado de Othello-GPT (`ckpts/gpt_championship.ckpt`, obtenido de Kenneth Li e incluido en el repositorio). **No cubre el entrenamiento de Othello-GPT desde cero**, esto ya lo realizaron Kenneth Li et al.
 
 ##  Requisitos Previos
 
-- **Python 3.8+** (probado con Python 3.8-3.11)
+- **Python 3.8+** (declarado como compatible en `pyproject.toml`; verificado en esta guía únicamente con Python 3.11.9)
 - **pip** (administrador de paquetes de Python)
 - **Git** (opcional, para clonar el repositorio)
 - **CUDA** (opcional, para entrenamiento con GPU)
@@ -16,7 +18,48 @@ python --version
 pip --version
 ```
 
+### Entorno de GPU usado durante el desarrollo
+
+El proyecto fue desarrollado y probado con la siguiente configuración de GPU:
+
+| Componente | Versión |
+|---|---|
+| GPU | NVIDIA GeForce RTX 5060 |
+| Driver NVIDIA | 591.59 (soporta hasta CUDA 13.1) |
+| PyTorch | 2.8.0+cu128 |
+
+**Nota**: La RTX 5060 es arquitectura Blackwell (compute capability `sm_120`), que requiere como mínimo builds de PyTorch con soporte CUDA 12.8 (`+cu128`) para usar aceleración GPU.
+
+`pyproject.toml`/`requirements.txt` solo piden `torch>=1.8.0` (sin techo de versión), así que `pip install -e ".[all]"` instalará automáticamente **la última versión de PyTorch disponible**, no necesariamente 2.8.0+cu128. Esto es intencional para no atar el proyecto a una versión fija, pero según tu GPU debes ajustar el paso de PyTorch:
+
+- **Si tienes una GPU Blackwell (serie RTX 50, como la RTX 5060)**: instala la misma versión usada en desarrollo para asegurar compatibilidad:
+  ```bash
+  pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu128 --force-reinstall
+  ```
+- **Si tienes una GPU NVIDIA más antigua (series RTX 30/40 o anteriores)**: usa el build de CUDA que soporte tu driver (`cu121`, `cu124`, etc.), no es necesario que coincida con `cu128`.
+- **Si no tienes GPU**: no necesitas hacer nada especial — la versión que instala `pip install -e ".[all]"` por defecto (build CPU) funciona igual, solo el entrenamiento será más lento.
+
+Verifica tu propio driver y GPU con:
+
+```bash
+nvidia-smi
+```
+
 ##  Instalación Rápida
+
+### Paso previo: Crear entorno virtual
+
+Se recomienda instalar el proyecto dentro de un entorno virtual, usando Python 3.11 (si tienes varias versiones de Python instaladas, usa `py -3.11` en vez de `python` para asegurar la versión correcta):
+
+```bash
+# Windows (PowerShell)
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+
+# Linux/Mac
+python3.11 -m venv .venv
+source .venv/bin/activate
+```
 
 ### Opción 1: Instalación Completa (Recomendada)
 
@@ -48,69 +91,6 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-##  Instalaciones Opcionales
-
-### Para Interpretabilidad Mecanística
-
-```bash
-pip install -e ".[interpretability]"
-```
-
-Incluye:
-- `transformer-lens` - Para análisis de circuitos
-- `einops` - Operaciones de tensores
-- `fancy-einsum` - Einstein summation notation
-
-### Para Desarrollo
-
-```bash
-pip install -e ".[dev]"
-```
-
-Incluye:
-- `pytest` - Testing
-- `black` - Formateo de código
-- `flake8` - Linting
-- `mypy` - Type checking
-
-### Para Gráficos de Publicación
-
-```bash
-pip install scienceplots
-```
-
- **Nota**: `scienceplots` requiere LaTeX instalado en el sistema. Ver [FAQ de SciencePlots](https://github.com/garrettj403/SciencePlots/wiki/FAQ#installing-latex).
-
-##  Descargar Datasets
-
-Los datasets no están incluidos en el repositorio. Descárgalos desde:
-
-1. **Championship Dataset**: [Google Drive](https://drive.google.com/drive/folders/1KFtP7gfrjmaoCV-WFC4XrdVeOxy1KmXe?usp=sharing)
-2. **Synthetic Dataset**: [Google Drive](https://drive.google.com/drive/folders/1pDMdMrnxMRiDnUd-CNfRNvZCi7VXFRtv?usp=sharing)
-
-Colócalos en:
-```
-othello_world/
-├── data/
-│   ├── othello_championship/
-│   └── othello_synthetic/
-```
-
-##  Descargar Checkpoints (Opcional)
-
-Si quieres evitar el entrenamiento, descarga los checkpoints:
-
-- **Modelo GPT**: [Google Drive - GPT Checkpoints](https://drive.google.com/drive/folders/1bpnwJnccpr9W-N_hzXSm59hT7Lij4HxZ?usp=sharing)
-- **Probes**: [Google Drive - Probe Checkpoints](https://drive.google.com/drive/folders/1uvj_M9ekHDJVdVOvMq828Z23AE7jZ01H?usp=sharing)
-
-Colócalos en:
-```
-othello_world/
-└── ckpts/
-    ├── gpt_championship.ckpt
-    └── battery_othello/
-```
-
 ##  Verificar Instalación
 
 ### Probar Imports
@@ -119,155 +99,30 @@ othello_world/
 python -c "from mingpt.model import GPT; from data.othello import Othello; print('✓ Imports funcionando correctamente')"
 ```
 
-### Ejecutar la GUI
+### Verificar GPU (si aplica)
 
 ```bash
-# Desde cualquier directorio
-othello-gui
-
-# O directamente con Python
-python -m gui.run
+python -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
 ```
 
-Deberían abrirse 4 ventanas:
-1. Tablero de juego principal
-2. Gráfico de barras de probabilidades
-3. Heatmap simple
-4. Heatmap integrado con fichas
+Si tienes GPU y todo quedó bien instalado, deberías ver la versión de PyTorch con el build de CUDA correspondiente (ej. `2.8.0+cu128`), `True`, y el nombre de tu GPU.
 
-##  Ejecutar Notebooks
+### Verificación realizada
 
-```bash
-# Iniciar Jupyter
-jupyter notebook
+Se probaron los siguientes pasos clave de esta guía (Opción 1 de instalación) en dos entornos distintos (venv separados, Python 3.11). No se probaron: Opciones 2/3 de instalación, instalaciones opcionales (`interpretability`, `dev`, `scienceplots`), datasets/checkpoints, notebooks, ni el entrenamiento de probes/SAE.
 
-# Abrir cualquier notebook, por ejemplo:
-# - train_gpt_othello.ipynb
-# - Othello_GPT_Circuits.ipynb
-# - sae/model/train_sae_othello.ipynb
-```
+| Paso | Con GPU (RTX 5060, cu128) | Solo CPU |
+|---|---|---|
+| Creación de venv | ✅ | ✅ |
+| `pip install -e ".[all]"` | ✅ | ✅ |
+| PyTorch detecta el hardware correctamente | ✅ (`2.8.0+cu128`, `cuda.is_available()=True`) | ✅ (`2.12.1+cpu`, `cuda.is_available()=False`) |
+| Imports del proyecto (`mingpt`, `data.othello`) | ✅ | ✅ |
 
-##  Solución de Problemas
 
-### Error: "No module named 'mingpt'"
-
-**Solución**: Asegúrate de haber instalado el paquete en modo editable:
-```bash
-pip install -e .
-```
-
-### Error: "No module named 'transformer_lens'"
-
-**Solución**: Instala las dependencias de interpretabilidad:
-```bash
-pip install -e ".[interpretability]"
-```
-
-### Error: "FileNotFoundError: checkpoint not found"
-
-**Solución**: Descarga el checkpoint `gpt_championship.ckpt` y colócalo en `ckpts/`
-
-### La GUI no se abre
-
-**Solución**: Verifica que tkinter esté instalado:
-```bash
-python -m tkinter
-# Debería abrir una ventana de prueba
-```
-
-En Ubuntu/Debian:
-```bash
-sudo apt-get install python3-tk
-```
-
-### Error de memoria (OOM) durante entrenamiento
-
-**Solución**: Reduce el batch size en la configuración del entrenamiento o usa una GPU con más memoria.
-
-##  Uso Básico
-
-### 1. Jugar contra el Modelo
-
-```bash
-othello-gui
-```
-
-### 2. Entrenar el Modelo GPT
-
-```bash
-jupyter notebook train_gpt_othello.ipynb
-```
-
-### 3. Entrenar Probes
-
-```bash
-# Probe lineal en capa 6
-python train_probe_othello.py --layer 6 --championship
-
-# Probe no lineal (2 capas) en capa 6
-python train_probe_othello.py --layer 6 --twolayer --mid_dim 64 --championship
-```
-
-### 4. Extraer Activaciones para SAE
-
-```bash
-python sae/activations/run_extraction.py
-```
-
-### 5. Entrenar SAE
-
-```bash
-jupyter notebook sae/model/train_sae_othello.ipynb
-```
-
-##  Estructura del Proyecto
-
-```
-othello_world/
-├── data/                    # Lógica del juego Othello
-├── mingpt/                  # Modelo GPT y entrenamiento
-├── gui/                     # Interfaz gráfica
-├── sae/                     # Sparse Autoencoders
-├── mechanistic_interpretability/  # Análisis de circuitos
-├── ckpts/                   # Checkpoints del modelo
-├── setup.py                 # Configuración del paquete
-├── pyproject.toml           # Configuración moderna
-└── requirements.txt         # Dependencias del proyecto
-```
-
-##  Actualizar Instalación
-
-Si haces cambios en el código:
-
-```bash
-# No necesitas reinstalar, los cambios se reflejan automáticamente con -e
-# Solo reinstala si cambias dependencias en setup.py:
-pip install -e ".[all]" --upgrade
-```
-
-##  Documentación Adicional
+## Documentación Adicional
 
 - **README principal**: [README.md](README.md)
-- **Informe técnico**: [gui/doc/Informe_Tecnico.md](gui/doc/Informe_Tecnico.md)
 - **Paper original**: [arXiv:2210.13382](https://arxiv.org/abs/2210.13382)
 
-##  Mejoras Implementadas en esta Versión
 
-✅ **Instalación como paquete Python estándar**
-✅ **Eliminadas manipulaciones de `sys.path`**
-✅ **Imports limpios y consistentes**
-✅ **Configuración con `pyproject.toml` (PEP 621)**
-✅ **Comando CLI: `othello-gui`**
-✅ **Soporte para instalación con pip desde cualquier directorio**
-✅ **Mejor organización de dependencias opcionales**
-
-##  Contribuir
-
-Si encuentras problemas o quieres contribuir:
-
-1. Abre un issue en GitHub
-2. Envía un pull request
-3. Contacta a los autores (ver paper)
-
----
 

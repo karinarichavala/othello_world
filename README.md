@@ -7,6 +7,26 @@ Neel Nanda just released a [TransformerLens](https://github.com/neelnanda-io/Tra
 This repository provides the code for training, probing and intervening the Othello-GPT in [Emergent World Representations: Exploring a Sequence Model Trained on a Synthetic Task](https://arxiv.org/abs/2210.13382), to be present at ICLR 2023.  
 The implementation is based on [minGPT](https://github.com/karpathy/minGPT), thanks to Andrej Karpathy.
 
+## Fork for undergraduate thesis project (EPN)
+
+This repository is a fork of the original OthelloGPT project (Kenneth Li et al.,
+see citation in [How to Cite](#how-to-cite)), extended as part of the undergraduate
+thesis "Sparse Autoencoders Applied to Othello" (Karina Arichavala Álvarez,
+Escuela Politécnica Nacional).
+
+Folders added on top of the base project:
+
+- `sae/` — implementation and evaluation of three Sparse Autoencoder variants
+  (P-annealing, BatchTopK, Matryoshka) and the Coverage and Board Reconstruction
+  metrics. This is the core component of the thesis work.
+- `gui/` — graphical interface for interacting with OthelloGPT, originally planned
+  in the initial work plan. During development the focus shifted toward the SAE
+  component, so this interface **is not part of the final scope** nor of the
+  results presented in the thesis.
+
+Additional dependency configuration files were also added to run the SAE
+training and evaluation pipeline.
+
 ## Abstract
 
 > Language models show a surprising range of capabilities, but the source of their apparent competence is unclear. Do these networks just memorize a collection of surface statistics, or do they rely on internal representations of the process that generates the sequences they see? We investigate this question by applying a variant of the GPT model to the task of predicting legal moves in a simple board game, Othello. Although the network has no a priori knowledge of the game or its rules, we uncover evidence of an emergent nonlinear internal representation of the board state. Interventional experiments indicate this representation can be used to control the output of the network and create "latent saliency maps" that can help explain predictions in human terms.
